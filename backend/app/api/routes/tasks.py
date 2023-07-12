@@ -56,14 +56,15 @@ async def create_new_task(
     "/{task_id}/",
     response_model=TaskPublic,
     response_description="Update task by id",
-    name="task:update-task-by-id",
+    name="task:update-task-by-id"
 )
 async def update_task_by_id(
         task_id: str,
+        task: TaskPublic = Depends(get_task_by_id_from_path),
         task_update: TaskUpdate = Body(...),
-        task_repo: TaskRepository = Depends(get_repository(TaskRepository))
+        task_repo: TaskRepository = Depends(get_repository(TaskRepository)),
 ) -> TaskPublic:
-    return await task_repo.update_task_by_id(task_id=task_id, task_update=task_update)
+    return await task_repo.update_task_by_id(task_id=task_id, task=task, task_update=task_update)
 
 
 @router.delete(

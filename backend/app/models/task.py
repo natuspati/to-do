@@ -1,7 +1,7 @@
 from typing import Optional
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import field_serializer, field_validator
 
 from app.models.core import CoreModel, DateTimeModelMixin, UUIDModelMixin
 
@@ -18,7 +18,7 @@ class TaskBase(CoreModel):
     status: Optional[TaskStatus] = "pending"
 
 
-class TaskCreate(UUIDModelMixin, DateTimeModelMixin, TaskBase):
+class TaskCreate(CoreModel):
     name: str
     description: str
     
@@ -34,37 +34,37 @@ class TaskCreate(UUIDModelMixin, DateTimeModelMixin, TaskBase):
 
 
 class TaskUpdate(TaskBase):
-    name: Optional[str] = ''
-    descriptions: Optional[str] = ''
-    status: Optional[TaskStatus] = 'pending'
-
+    name: Optional[str] = "abc"
+    description: Optional[str] = "abc"
+    status: Optional[TaskStatus] = "abc"
+    
     model_config = {
         'json_schema_extra': {
             "examples": [
                 {
-                    "description": "Should be an pumpkin pie",
+                    "description": "Should be a pumpkin pie",
                     "status": "completed"
                 }
             ]}
     }
     
+    @field_validator('name', 'description', 'status')
+    def forbid_null_value(cls, value: TaskStatus | str | None):
+        if value is None:
+            raise ValueError('Status cannot be None')
+        return value
+    
     @field_serializer('status', check_fields=False)
-    def convert_status_to_string(self, value: TaskStatus | str):
+    def serialize_status_to_string(self, value: TaskStatus | str):
         if isinstance(value, TaskStatus):
             return value.value
         elif isinstance(value, str):
             return value
 
 
-class TaskInDB(TaskCreate):
+class TaskInDB(UUIDModelMixin, DateTimeModelMixin, TaskCreate, TaskBase):
     status: TaskStatus = "pending"
 
 
 class TaskPublic(TaskInDB):
     pass
-
-
-class TaskModel(UUIDModelMixin, DateTimeModelMixin, TaskBase):
-    name: str
-    description: str
-    status: Optional[TaskStatus] = "pending"

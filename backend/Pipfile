@@ -12,6 +12,7 @@ pytest = "*"
 anyio = "*"
 async-asgi-testclient = "*"
 pytest-asyncio = "*"
+install = "*"
 
 [dev-packages]
 

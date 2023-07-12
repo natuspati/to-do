@@ -20,6 +20,7 @@ class DateTimeModelMixin(BaseModel):
     def convert_datetime_to_string(self, v):
         return str(v)
 
+
 class UUIDModelMixin(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, alias="_id")
     

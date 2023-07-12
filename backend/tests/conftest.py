@@ -12,7 +12,7 @@ from async_asgi_testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.core.config import DATABASE_URL, DATABASE_NAME
-from app.models.task import TaskCreate, TaskInDB, TaskPublic, TaskUpdate
+from app.models.task import TaskCreate, TaskPublic, TaskUpdate
 from app.db.repositories.tasks import TaskRepository
 
 
@@ -72,6 +72,23 @@ async def test_task(db: AsyncIOMotorDatabase, new_task: dict) -> TaskPublic:
     task_repo = TaskRepository(db)
     task = TaskCreate.model_validate(new_task)
     return await task_repo.create_task(task=task)
+
+
+@pytest_asyncio.fixture
+def test_task_factory(db: AsyncIOMotorDatabase, new_task: dict) -> Callable:
+    async def _test_task(status: str) -> TaskPublic:
+        task_repo = TaskRepository(db)
+        
+        new_task["name"] = f"{status} task"
+        created_task = await task_repo.create_task(task=TaskCreate.model_validate(new_task))
+        updated_task = await task_repo.update_task_by_id(
+            task_id=str(created_task.id),
+            task=created_task,
+            task_update=TaskUpdate.model_validate({"status": status})
+        )
+        return updated_task
+    
+    return _test_task
 
 
 @pytest_asyncio.fixture
